@@ -13,7 +13,7 @@
       <remap from="~follow_joint_trajectory" to="/whole_body_controller/follow_joint_trajectory" />
       <remap from="~joint_trajectory_controller_state" to="/whole_body_controller/state"/>
 
-      <rosparam command="load" file="$(find planning_scanner)/config/donbot_qp_controller.yaml" />
+      <rosparam command="load" file="$(find refills_cram)/config/donbot_qp_controller.yaml" />
     </node>
   </group>
 
@@ -25,11 +25,11 @@
       <remap from="~follow_joint_trajectory" to="/follow_joint_trajectory" />
       <remap from="~joint_trajectory_controller_state" to="/fake_state" />
 
-      <rosparam command="load" file="$(find planning_scanner)/config/donbot_qp_controller.yaml" />
+      <rosparam command="load" file="$(find refills_cram)/config/donbot_qp_controller.yaml" />
     </node>
   </group>
 
   <node pkg="rviz" type="rviz" name="rviz" output="screen" required="true"
-        args="-d $(find planning_scanner)/config/display.rviz" />
+        args="-d $(find refills_cram)/config/display.rviz" />
 
 </launch>
