@@ -1,3 +1,6 @@
 - git:
     local-name: refills_cram
     uri: https://github.com/kstoermer/refills_cram.git
+- git:
+    local-name: iai_donbot_sim
+    uri: https://github.com/code-iai/iai_donbot_sim.git
