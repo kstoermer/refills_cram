@@ -1,0 +1,3 @@
+- git:
+    local-name: refills_cram
+    uri: https://github.com/kstoermer/refills_cram.git
