@@ -25,5 +25,9 @@
 (:file "low-level" :depends-on ("package"
 				"prolog-facts"))
 (:file "process-modules" :depends-on ("package" 
-				   "prolog-facts"
-				   "low-level"))))))
+				      "prolog-facts"
+				      "low-level"))
+(:file "high-level" :depends-on ("package" 
+				      "prolog-facts"
+				      "low-level"
+				      "process-modules"))))))

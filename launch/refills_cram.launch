@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="refills_cram" type="main" name="refills_cram_main" output="screen" />
+</launch>
