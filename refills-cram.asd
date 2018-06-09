@@ -10,6 +10,7 @@
                actionlib
                geometry_msgs-msg
 	       move_base_msgs-msg
+	       refills_cram_msgs-msg
 	       cram-language
 	       cram-prolog
                cram-designators
