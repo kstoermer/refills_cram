@@ -7,6 +7,7 @@
   :depends-on (roslisp
                roslisp-utilities
                cl-tf
+	       cl-tf2
                actionlib
                geometry_msgs-msg
 	       move_base_msgs-msg
