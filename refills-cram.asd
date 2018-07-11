@@ -11,6 +11,7 @@
                actionlib
                geometry_msgs-msg
 	       move_base_msgs-msg
+	       cram-json-prolog
 	       refills_cram_msgs-msg
 	       cram-language
 	       cram-prolog

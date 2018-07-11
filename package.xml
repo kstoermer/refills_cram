@@ -19,6 +19,7 @@
   <buildtool_depend>cram_designators</buildtool_depend>
   <buildtool_depend>cram_process_modules</buildtool_depend>
   <buildtool_depend>cram_executive</buildtool_depend>
+  <buildtool_depend>cram_json_prolog</buildtool_depend>
 <build_depend>message_generation</build_depend>
 <run_depend>message_runtime</run_depend>
 <build_depend>std_msgs</build_depend>
