@@ -14,7 +14,7 @@
 - git:
     local-name: giskard_msgs
     uri: https://github.com/SemRoCo/giskard_msgs.git
-    version: f0e7c5
+    version: master
 - git:
     local-name: giskard_ros
     uri: https://github.com/SemRoCo/giskard_ros.git
@@ -79,3 +79,11 @@
     local-name: refills_cram_msgs
     uri: https://github.com/kstoermer/refills_cram_msgs.git
     version: master
+- git:
+    local-name: moveit_msgs
+    uri: https://github.com/ros-planning/moveit_msgs
+    version: kinetic-devel
+- git:
+    local-name: octomap_msgs
+    uri: https://github.com/OctoMap/octomap_msgs.git
+    version: kinetic-devel
