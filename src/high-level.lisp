@@ -20,6 +20,90 @@
 (defvar *goal_location* "'http://knowrob.org/kb/knowrob.owl#goalLocation'")
 (defvar *detected_object* "'http://knowrob.org/kb/knowrob.owl#detectedObject'")
 
+;;Class for 1 Shelf
+(defclass shelf ()
+  ((shelf-name
+    :initarg :shelf-name
+    :initform (error "Must have name"))
+   (shelf-pos-stamped
+    :initarg :shelf-pos-stamped
+    :initform (error "Must contain pose-stamped"))))
+
+(defvar *fake-pos1*
+  (roslisp:make-msg "geometry_msgs/PoseStamped"
+                    (std_msgs-msg:frame_id std_msgs-msg:header)
+                    "map"
+                    (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Point"
+                                      (x) 0.6675
+                                      (y) -0.59
+                                      (z) 0.0 )
+                    (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Quaternion"
+                                      (w) 1.0)))
+
+(defvar *fake-pos2*
+  (roslisp:make-msg "geometry_msgs/PoseStamped"
+                    (std_msgs-msg:frame_id std_msgs-msg:header)
+                    "map"
+                    (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Point"
+                                      (x) 1.665
+                                      (y) -0.59
+                                      (z) 0.0 )
+                    (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Quaternion"
+                                      (w) 1.0)))
+
+(defvar *fake-pos3*
+  (roslisp:make-msg "geometry_msgs/PoseStamped"
+                    (std_msgs-msg:frame_id std_msgs-msg:header)
+                    "map"
+                    (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Point"
+                                      (x) 2.6675
+                                      (y) -0.59
+                                      (z) 0.0 )
+                    (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Quaternion"
+                                      (w) 1.0)))
+
+(defvar *fake-pos4*
+  (roslisp:make-msg "geometry_msgs/PoseStamped"
+                    (std_msgs-msg:frame_id std_msgs-msg:header)
+                    "map"
+                    (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Point"
+                                      (x) 3.6675
+                                      (y) -0.59
+                                      (z) 0.0 )
+                    (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+                    (roslisp:make-msg "geometry_msgs/Quaternion"
+                                      (w) 1.0)))
+
+(defvar *fake-shelf1*
+  (make-instance 'shelf
+                 :shelf-name "shelf_system_0"
+                 :shelf-pos-stamped *fake-pos1*))
+
+(defvar *fake-shelf2*
+  (make-instance 'shelf
+                 :shelf-name "shelf_system_1"
+                 :shelf-pos-stamped *fake-pos2*))
+
+(defvar *fake-shelf3*
+  (make-instance 'shelf
+                 :shelf-name "shelf_system_2"
+                 :shelf-pos-stamped *fake-pos3*))
+
+(defvar *fake-shelf4*
+  (make-instance 'shelf
+                 :shelf-name "shelf_system_3"
+                 :shelf-pos-stamped *fake-pos4*))
+
+(defvar *fake-shelf-list*
+  (list *fake-shelf1* *fake-shelf2* *fake-shelf3* *fake-shelf4*))
+
 (defun main ()
   (roslisp-utilities:startup-ros)
   (roslisp:spin-until (= 0 1) 2))
@@ -38,10 +122,23 @@
    (json-prolog:prolog-simple
     (format nil "object_perception_affordance_frame_name(\'~a\', F)" object-id))))
 
-(defun add-shelves (shelf-system-id)
+(defun add-shelves (list-of-shelfes shelf-system-id)
   "Adds shelves into knowrob and world"
-  (json-prolog:prolog-simple
-   (format nil "belief_new_object(~a, ID), rdf_assert(\'~a\', knowrob:properPhysicalParts, ID, belief_state), object_affordance_static_transform(ID, A, [_,_,T,R]), rdfs_individual_of(A, ~a)" *shelf_meter* shelf-system-id *perception_affordance*)))
+  (loop for shelf in list-of-shelfes do
+    (let ((result
+            (json-prolog:prolog-simple
+             (format nil "belief_new_object(~a, ID), rdf_assert(\'~a\', knowrob:properPhysicalParts, ID, belief_state), object_affordance_static_transform(ID, A, [_,_,T,R]), rdfs_individual_of(A, ~a)" *shelf_meter* shelf-system-id *perception_affordance*))))
+      (let ((query-pos (list-to-posestamped (get-result-of-query "?T" result)))
+            (id (get-real-string (get-result-of-query "?ID" result)))
+            (shelf-pos (slot-value shelf 'shelf-pos-stamped)))
+        (let ((new-pose
+                (roslisp:modify-message-copy
+                 shelf-pos
+                 (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                 (geometry_msgs-msg:position (geometry_msgs-msg:pose query-pos)))))
+          (print
+           (json-prolog:prolog-simple
+            (format nil "belief_at_update(\'~a\', ~a)" id (pose-to-prolog new-pose)))))))))
 
 (defun get-result-of-query (result-specifier result-list)
   "Gets Result out of query"
@@ -52,7 +149,7 @@
       (return-from get-result-of-query nil)))
 
 (defun get-real-string (string-query)
-  (subseq string-query 3 (- (length string-query) 3)))
+  (subseq (string string-query) 2 (- (length (string string-query)) 2)))
 
 (defun pose-to-prolog (pose-stamped)
   (format nil "[\'~a\', _, [~a, ~a, ~a], [~a,~a,~a,~a]]"
@@ -64,3 +161,13 @@
           (geometry_msgs-msg:y (geometry_msgs-msg:orientation (geometry_msgs-msg:pose pose-stamped)))
           (geometry_msgs-msg:z (geometry_msgs-msg:orientation (geometry_msgs-msg:pose pose-stamped)))
           (geometry_msgs-msg:w (geometry_msgs-msg:orientation (geometry_msgs-msg:pose pose-stamped)))))
+
+(defun list-to-poseStamped (list-of-position-xyz)
+  (roslisp:make-msg
+   "geometry_msgs/PoseStamped"
+   (geometry_msgs-msg:x geometry_msgs-msg:position geometry_msgs-msg:pose)
+   (coerce (first list-of-position-xyz) 'single-float)
+   (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
+   (coerce (second list-of-position-xyz) 'single-float)
+   (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
+   (coerce (third list-of-position-xyz) 'single-float)))
