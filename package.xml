@@ -14,6 +14,8 @@
   <buildtool_depend>actionlib_lisp</buildtool_depend>
   <buildtool_depend>geometry_msgs</buildtool_depend>
   <buildtool_depend>move_base_msgs</buildtool_depend>
+  <buildtool_depend>sensor_msgs</buildtool_depend>
+  <buildtool_depend>giskard_msgs</buildtool_depend>
   <buildtool_depend>cram_language</buildtool_depend>
   <buildtool_depend>cram_prolog</buildtool_depend>
   <buildtool_depend>cram_designators</buildtool_depend>

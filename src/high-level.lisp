@@ -128,14 +128,14 @@
     (let ((result
             (json-prolog:prolog-simple
              (format nil "belief_new_object(~a, ID), rdf_assert(\'~a\', knowrob:properPhysicalParts, ID, belief_state), object_affordance_static_transform(ID, A, [_,_,T,R]), rdfs_individual_of(A, ~a)" *shelf_meter* shelf-system-id *perception_affordance*))))
-      (let ((query-pos (list-to-posestamped (get-result-of-query "?T" result)))
+      (let ((query-pos (get-result-of-query "?T" result))
             (id (get-real-string (get-result-of-query "?ID" result)))
             (shelf-pos (slot-value shelf 'shelf-pos-stamped)))
         (let ((new-pose
                 (roslisp:modify-message-copy
                  shelf-pos
                  (geometry_msgs-msg:position geometry_msgs-msg:pose)
-                 (geometry_msgs-msg:position (geometry_msgs-msg:pose query-pos)))))
+                 (geometry_msgs-msg:position (geometry_msgs-msg:pose (substract-list-from-poseStamped shelf-pos query-pos))))))
           (print
            (json-prolog:prolog-simple
             (format nil "belief_at_update(\'~a\', ~a)" id (pose-to-prolog new-pose)))))))))
@@ -162,12 +162,18 @@
           (geometry_msgs-msg:z (geometry_msgs-msg:orientation (geometry_msgs-msg:pose pose-stamped)))
           (geometry_msgs-msg:w (geometry_msgs-msg:orientation (geometry_msgs-msg:pose pose-stamped)))))
 
-(defun list-to-poseStamped (list-of-position-xyz)
+(defun substract-list-from-poseStamped (PoseStamped list-of-position-xyz)
   (roslisp:make-msg
    "geometry_msgs/PoseStamped"
    (geometry_msgs-msg:x geometry_msgs-msg:position geometry_msgs-msg:pose)
-   (coerce (first list-of-position-xyz) 'single-float)
+   (-
+    (geometry_msgs-msg:x (geometry_msgs-msg:position (geometry_msgs-msg:pose PoseStamped))) 
+    (coerce (first list-of-position-xyz) 'single-float))
    (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
-   (coerce (second list-of-position-xyz) 'single-float)
+   (-
+    (geometry_msgs-msg:y (geometry_msgs-msg:position (geometry_msgs-msg:pose PoseStamped)))
+    (coerce (second list-of-position-xyz) 'single-float))
    (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
-   (coerce (third list-of-position-xyz) 'single-float)))
+   (-
+    (geometry_msgs-msg:z (geometry_msgs-msg:position (geometry_msgs-msg:pose PoseStamped)))
+    (coerce (third list-of-position-xyz) 'single-float))))
