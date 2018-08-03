@@ -28,6 +28,7 @@
     ((:file "package")
 (:file "prolog-facts" :depends-on ("package"))
 (:file "giskard-wrapper" :depends-on ("package"))
+(:file "prefilled-params" :depends-on ("package"))
 (:file "low-level" :depends-on ("package"
 				"prolog-facts"))
 (:file "process-modules" :depends-on ("package" 
