@@ -104,11 +104,41 @@
 (defvar *fake-shelf-list*
   (list *fake-shelf1* *fake-shelf2* *fake-shelf3* *fake-shelf4*))
 
-(defun main ()
-  (roslisp-utilities:startup-ros)
-  (roslisp:spin-until (= 0 1) 2))
+(defvar *fake-floors*
+  (list
+   (cons 0 (list
+            (list 0 0 0.15) (list 0 0.1 0.55) (list 0 0.1 0.88) (list 0 0.1 1.17) (list 0 0.1 1.43)))
+   (cons 1 (list
+            (list 0 0 0.15) (list 0 0.1 0.38) (list 0 0.1 0.59) (list 0 0.2 1.11) (list 0 0.2 1.42)))
+   (cons 2 (list
+            (list 0 0 0.15) (list 0 0.1 0.47) (list 0 0.1 0.76) (list 0 0.1 1.06) (list 0 0.1 1.39)))
+   (cons 3 (list
+            (list 0 0 0.15) (list 0 0.1 0.43) (list 0 0.1 0.68) (list 0 0.1 0.93) (list 0 0.1 1.18) (list 0 0.1 1.43)))))
 
-(defun add-shelf-system () 
+(defvar *registered-shelf-ids* nil)
+
+(defun main ()
+  (roslisp:with-ros-node ("talker")
+    (init-lowlevel)
+    (init-giskard-wrapper)
+    (wait-duration 1)
+    ;; (roslisp-utilities:startup-ros)
+    ;; First register shelf-system and shelfes
+    (let ((shelf-ids
+            (add-shelves *fake-shelf-list* (add-shelf-system))))
+      (move-arm-drivepos)
+      (loop for shelf-id in shelf-ids do
+        (mark-shelf shelf-id)
+        (ros-info "main" "traversing to front of shelf ~a" shelf-id)
+        (traverse-to-shelf shelf-id "front")
+        (wait-duration 5)
+        (ros-info "main" "traversing to end of shelf ~a" shelf-id)
+        (traverse-to-shelf shelf-id "end")
+        (wait-duration 10)))
+    (roslisp:spin-until (= 0 1) 2)))
+
+(defun add-shelf-system ()
+  (ros-info "add-shelf-system" "Adding new shelf-system")
   (get-real-string
    (get-result-of-query
     "?R"
@@ -117,13 +147,14 @@
 
 (defun get-perceived-frame-id (object-id)
   "Gets frameid for object"
-  (get-result-of-query
-   "?F"
-   (json-prolog:prolog-simple
-    (format nil "object_perception_affordance_frame_name(\'~a\', F)" object-id))))
+  (get-real-string
+   (get-result-of-query
+    "?F"
+    (json-prolog:prolog-simple
+     (format nil "object_perception_affordance_frame_name(\'~a\', F)" object-id)))))
 
 (defun add-shelves (list-of-shelfes shelf-system-id)
-  "Adds shelves into knowrob and world"
+  "Adds shelves into knowrob and world returns list of shelf ids"
   (loop for shelf in list-of-shelfes do
     (let ((result
             (json-prolog:prolog-simple
@@ -131,14 +162,27 @@
       (let ((query-pos (get-result-of-query "?T" result))
             (id (get-real-string (get-result-of-query "?ID" result)))
             (shelf-pos (slot-value shelf 'shelf-pos-stamped)))
+        (setf *registered-shelf-ids* (nconc *registered-shelf-ids* (list id)))
         (let ((new-pose
                 (roslisp:modify-message-copy
                  shelf-pos
                  (geometry_msgs-msg:position geometry_msgs-msg:pose)
                  (geometry_msgs-msg:position (geometry_msgs-msg:pose (substract-list-from-poseStamped shelf-pos query-pos))))))
-          (print
            (json-prolog:prolog-simple
-            (format nil "belief_at_update(\'~a\', ~a)" id (pose-to-prolog new-pose)))))))))
+            (format nil "belief_at_update(\'~a\', ~a)" id (pose-to-prolog new-pose)))
+          (ros-info "add-shelfes" "added shelf with id: ~a" id)))))
+  (return-from add-shelves *registered-shelf-ids*))
+
+(defun add-shelf-floor (shelf-id floors)
+  (loop for floor in floors do
+    (let ((layer-type
+            (if (< (second floor) 0.13)
+                (if (< (third floor) 0.2)
+                     *shelf_floor_standing_ground*
+                     *shelf_floor_standing*)
+                *shelf_floor_mounting*)))
+      (json-prolog:prolog-simple
+       (format nil "belief_shelf_part_at(\'~a\', ~a, ~a, R)" shelf-id layer-type (last floor))))))
 
 (defun get-result-of-query (result-specifier result-list)
   "Gets Result out of query"

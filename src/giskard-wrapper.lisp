@@ -19,6 +19,8 @@
          *giskard-action-name*
          "giskard_msgs/ControllerListAction")))
 
+(roslisp-utilities:register-ros-init-function init-giskard-wrapper)
+
 (defun build-joint-goal (joint-state)
   (actionlib:make-action-goal
       *actionclient-giskard*
@@ -36,15 +38,16 @@
      (giskard_msgs-msg:weight) 1.0))))
 
 (defun move-arm-drivepos ()
-  (build-joint-goal
-   (roslisp:make-msg
-    "sensor_msgs/JointState"
-    (sensor_msgs-msg:name) *joint-names*
-    (sensor_msgs-msg:position)
-    #(-1.54838782946
-     -2.51830751101
-     1.37984895706
-     -2.07125074068
-     -1.59281522432
-     1.56871032715))))
+  (actionlib:send-goal *actionclient-giskard* 
+                       (build-joint-goal
+                        (roslisp:make-msg
+                         "sensor_msgs/JointState"
+                         (sensor_msgs-msg:name) *joint-names*
+                         (sensor_msgs-msg:position)
+                         #(-1.54838782946
+                           -2.51830751101
+                           1.37984895706
+                           -2.07125074068
+                           -1.59281522432
+                           1.56871032715)))))
   
