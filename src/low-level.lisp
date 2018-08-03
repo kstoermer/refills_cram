@@ -37,6 +37,7 @@
                     
 
 (defun init-lowlevel ()
+  "Initialization for this file"
   (setf *marker-publisher*
         (roslisp:advertise "/visualization_marker" "visualization_msgs/Marker"))
   (actionlib:start-action-server "testAction" "refills_cram_msgs/testActionAction"
@@ -49,18 +50,21 @@
 (roslisp-utilities:register-ros-init-function init-lowlevel)
 
 (defun transform-posestamped-into-frame (frame pose)
+  "Simple transformation method, transforms PoseStaped into frame"
   (cl-tf2:to-msg
    (cl-tf2:transform-pose-stamped *buffer-client*
                                  :pose (cl-tf:from-msg pose)
                                  :target-frame frame)))
 
 (defun move-base-absolute (target-pose)
+  "Move base to target PoseStamped"
   (actionlib:send-goal-and-wait *navp-controller-actionclient*
                        (actionlib:make-action-goal *navp-controller-actionclient*
                          :target_pose
                          (transform-posestamped-into-frame "/map" target-pose))))
 
 (defun traverse-to-shelf (shelf-id &optional (side "front"))
+  "Robot drives to front or end of shelf. Contains safetymeasures to make sure robot doesnt bump into things"
   (roslisp:ros-info "traverse-to-shelf" "calculation traversion to ~a" shelf-id)
   (let ((cur-pos
           (transform-posestamped-into-frame
@@ -100,6 +104,7 @@
   (actionlib:succeed-current :testResult (+ 1 testValue)))
 
 (defun mark-shelf (shelf-id)
+  "Visualize shelf front end end markings. For debugging purposes"
   (publish-marker
    (roslisp:make-msg "geometry_msgs/Pose"
                      (geometry_msgs-msg:w geometry_msgs-msg:orientation)
@@ -121,6 +126,7 @@
    )
 
 (defun publish-marker (pose id frame)
+  "Pubish yellow sphere marker"
   (roslisp:publish *marker-publisher*
                      (roslisp:make-message "visualization_msgs/Marker" (frame_id header) frame
                                          ns "planning_namespace"
@@ -159,6 +165,7 @@
         (return-from compare-pose-stamped nil))))
 
 (defun is-in-position-already (pose)
+  "Checks if robot is in given position already (with some delta)"
   (let
       ((current-pos
          (transform-posestamped-into-frame "/map" *current-pos*))

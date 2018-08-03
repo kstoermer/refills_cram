@@ -3,6 +3,7 @@
 (defvar *registered-shelf-ids* nil)
 
 (defun main ()
+  "Main Method later to be called from service"
   (roslisp:with-ros-node ("talker")
     (init-lowlevel)
     (init-giskard-wrapper)
@@ -23,6 +24,7 @@
     (roslisp:spin-until (= 0 1) 2)))
 
 (defun add-shelf-system ()
+  "Adds one Shelf-System and returns his id"
   (ros-info "add-shelf-system" "Adding new shelf-system")
   (get-real-string
    (get-result-of-query
@@ -31,7 +33,7 @@
      (format nil "belief_new_object(~a, R), rdf_assert(R, knowrob:describedInMap, iaishop:\'IAIShop_0\', belief_state)" *shelf_system*)))))
 
 (defun get-perceived-frame-id (object-id)
-  "Gets frameid for object"
+  "Gets frameid for object, this id can be used as frame further on"
   (get-real-string
    (get-result-of-query
     "?F"
@@ -59,6 +61,7 @@
   (return-from add-shelves *registered-shelf-ids*))
 
 (defun add-shelf-floor (shelf-id floors)
+  "adds list of shelf floors into one shelf, will be obsolete later"
   (loop for floor in floors do
     (let ((layer-type
             (if (< (second floor) 0.13)
@@ -70,7 +73,7 @@
        (format nil "belief_shelf_part_at(\'~a\', ~a, ~a, R)" shelf-id layer-type (last floor))))))
 
 (defun get-result-of-query (result-specifier result-list)
-  "Gets Result out of query"
+  "Gets Result out of query, result-specifier is something like ?A"
   (if result-list
       (loop for x in (car result-list) do
         (if (string= (car x) result-specifier)
@@ -78,9 +81,11 @@
       (return-from get-result-of-query nil)))
 
 (defun get-real-string (string-query)
+  "Extracts String from wierd knowrob return"
   (subseq (string string-query) 2 (- (length (string string-query)) 2)))
 
 (defun pose-to-prolog (pose-stamped)
+  "Prolog need special format to percieve a geometry_msgs/PoseStamped"
   (format nil "[\'~a\', _, [~a, ~a, ~a], [~a,~a,~a,~a]]"
           (std_msgs-msg:frame_id (geometry_msgs-msg:header pose-stamped))
           (geometry_msgs-msg:x (geometry_msgs-msg:position (geometry_msgs-msg:pose pose-stamped)))
@@ -92,6 +97,7 @@
           (geometry_msgs-msg:w (geometry_msgs-msg:orientation (geometry_msgs-msg:pose pose-stamped)))))
 
 (defun substract-list-from-poseStamped (PoseStamped list-of-position-xyz)
+  "Mathematical operation for substractiong xyz from geometry_msgs/PoseStamped"
   (roslisp:make-msg
    "geometry_msgs/PoseStamped"
    (geometry_msgs-msg:x geometry_msgs-msg:position geometry_msgs-msg:pose)

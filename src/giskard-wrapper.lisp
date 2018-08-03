@@ -3,6 +3,7 @@
 (defvar *actionclient-giskard*)
 
 (defun init-giskard-wrapper ()
+  "initialize giskard wrapper"
   (setf *actionclient-giskard*
         (actionlib:make-action-client
          *giskard-action-name*
@@ -11,6 +12,7 @@
 (roslisp-utilities:register-ros-init-function init-giskard-wrapper)
 
 (defun build-joint-goal (joint-state)
+  "Build joint goal out of joint-state message"
   (actionlib:make-action-goal
       *actionclient-giskard*
     (giskard_msgs-msg:type) 0
@@ -27,6 +29,7 @@
      (giskard_msgs-msg:weight) 1.0))))
 
 (defun move-arm-drivepos ()
+  "Drive pos for robot. Experimental"
   (actionlib:send-goal *actionclient-giskard* 
                        (build-joint-goal
                         (roslisp:make-msg
