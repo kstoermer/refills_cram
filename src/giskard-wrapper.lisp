@@ -2,17 +2,6 @@
 
 (defvar *actionclient-giskard*)
 
-(defvar *tip-link* "camera_link")
-(defvar *root-link* "base_link")
-(defvar *giskard-action-name* "/qp_controller/command")
-
-(defvar *joint-names* #("ur5_shoulder_pan_joint"
-                       "ur5_shoulder_lift_joint"
-                       "ur5_elbow_joint"
-                       "ur5_wrist_1_joint"
-                       "ur5_wrist_2_joint"
-                        "ur5_wrist_3_joint"))
-
 (defun init-giskard-wrapper ()
   (setf *actionclient-giskard*
         (actionlib:make-action-client
