@@ -8,18 +8,25 @@
     (init-lowlevel)
     (init-giskard-wrapper)
     (wait-duration 1)
-    ;; (roslisp-utilities:startup-ros)
-    ;; First register shelf-system and shelfes
+    ;;drive line
+    (move-arm-drivepos)
+    (move-base-absolute *start-pos*)
+    (baseboard-pose)
+    (move-base-absolute *end-pos*)
+    ;;register shelves
     (let ((shelf-ids
             (add-shelves *fake-shelf-list* (add-shelf-system))))
       (move-arm-drivepos)
-      (loop for shelf-id in shelf-ids do
+      (loop for shelf-id in shelf-ids
+            for i from 0 to 10 do
         (mark-shelf shelf-id)
         (ros-info "main" "traversing to front of shelf ~a" shelf-id)
-        (traverse-to-shelf shelf-id "front")
-        (wait-duration 5)
-        (ros-info "main" "traversing to end of shelf ~a" shelf-id)
-        (traverse-to-shelf shelf-id "end")
+        (traverse-to-shelf shelf-id "middle")
+        (floor-detection-pose2)
+        (wait-duration 1)
+        (floor-detection-pose)
+        (ros-info "main" "gibt zurueck ~a" (nth i *fake-floors*))
+        (add-shelf-floor shelf-id (cdr (nth i *fake-floors*)))
         (wait-duration 10)))
     (roslisp:spin-until (= 0 1) 2)))
 

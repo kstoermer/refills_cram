@@ -30,7 +30,7 @@
 
 (defun move-arm-drivepos ()
   "Drive pos for robot. Experimental"
-  (actionlib:send-goal *actionclient-giskard* 
+  (actionlib:send-goal-and-wait *actionclient-giskard* 
                        (build-joint-goal
                         (roslisp:make-msg
                          "sensor_msgs/JointState"
@@ -43,3 +43,46 @@
                            -1.59281522432
                            1.56871032715)))))
   
+(defun floor-detection-pose ()
+  "floor detection pos for robot. Experimental"
+  (actionlib:send-goal-and-wait *actionclient-giskard* 
+                       (build-joint-goal
+                        (roslisp:make-msg
+                         "sensor_msgs/JointState"
+                         (sensor_msgs-msg:name) *joint-names*
+                         (sensor_msgs-msg:position)
+                         #(-1.75002080599
+                           -2.07400399843
+                           1.79469525513
+                           -2.49168950716
+                           -1.52502566973
+                           1.5591506958)))))
+
+(defun floor-detection-pose2 ()
+  "floor detection pos for robot. Experimental"
+  (actionlib:send-goal-and-wait *actionclient-giskard* 
+                       (build-joint-goal
+                        (roslisp:make-msg
+                         "sensor_msgs/JointState"
+                         (sensor_msgs-msg:name) *joint-names*
+                         (sensor_msgs-msg:position)
+                         #(-1.61822063128
+                           -1.36299354235
+                           1.37984895706
+                           -2.07125074068
+                           -1.59281522432
+                           1.56871032715)))))
+(defun baseboard-pose ()
+  "baseboard pos for robot. Experimental"
+  (actionlib:send-goal-and-wait *actionclient-giskard* 
+                       (build-joint-goal
+                        (roslisp:make-msg
+                         "sensor_msgs/JointState"
+                         (sensor_msgs-msg:name) *joint-names*
+                         (sensor_msgs-msg:position)
+                         #(-1.56896144549
+                           -1.2928908507
+                           1.59626483917
+                           -2.61700326601
+                           -1.54054629803
+                           1.56871032715)))))

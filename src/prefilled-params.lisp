@@ -124,3 +124,18 @@
                        "ur5_wrist_1_joint"
                        "ur5_wrist_2_joint"
                         "ur5_wrist_3_joint"))
+
+(defvar *start-pos*
+  (roslisp:make-msg "geometry_msgs/PoseStamped"
+                    (std_msgs-msg:frame_id std_msgs-msg:header) "map"
+                    (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose) -1.5
+                    (geometry_msgs-msg:y geometry_msgs-msg:orientation geometry_msgs-msg:pose) -1
+                    ))
+
+(defvar *end-pos*
+  (roslisp:make-msg "geometry_msgs/PoseStamped"
+                    (std_msgs-msg:frame_id std_msgs-msg:header) "map"
+                    (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose) -1.5
+                    (geometry_msgs-msg:x geometry_msgs-msg:position geometry_msgs-msg:pose) 5
+                    (geometry_msgs-msg:y geometry_msgs-msg:orientation geometry_msgs-msg:pose) -1
+                    ))

@@ -26,6 +26,15 @@
                     (z)
                     0))
 
+(defvar *mid-of-shelf*
+  (roslisp:make-msg "geometry_msgs/Point"
+                    (x)
+                    0.5
+                    (y)
+                    -1.3
+                    (z)
+                    0))
+
 (defvar *end-of-shelf*
   (roslisp:make-msg "geometry_msgs/Point"
                     (x)
@@ -79,7 +88,8 @@
                              (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
                              1
                              (geometry_msgs-msg:position geometry_msgs-msg:pose)
-                             (if (string= side "front") *front-of-shelf* *end-of-shelf*)))))
+                             (if (string= side "front") *front-of-shelf*
+                                 (if (string= side "middle") *mid-of-shelf* *end-of-shelf*))))))
     (if (is-in-position-already shelf-pos)
         (ros-info "traverse-to-shelf" "Already in position, not moving")
         (progn
