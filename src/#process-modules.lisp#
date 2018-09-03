@@ -7,10 +7,9 @@
   (destructuring-bind (command donbotMovement) (reference motion-designator)
     (ecase command
       (drive-to-pos
-       (move-base-absolute (reference (donbot-movement-loc donbotMovement))))
+       (print
       (move-arm-to-pos
-       (print (reference (donbot-movement-loc donbotMovement)))
-       (move-arm-to-pose (reference (donbot-movement-loc donbotMovement)))))))
+       (print donbotMovement)))))
 
 (defun start (&optional ?pose ?shelfid)
   (top-level

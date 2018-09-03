@@ -49,7 +49,7 @@
   "Initialization for this file"
   (setf *marker-publisher*
         (roslisp:advertise "/visualization_marker" "visualization_msgs/Marker"))
-  (actionlib:start-action-server "testAction" "refills_cram_msgs/testActionAction"
+  (actionlib:start-action-server "donbot" "refills_cram_msgs/donbotAction"
                                  #'addition :separate-thread t)
   (setf *navp-controller-actionclient*
         (actionlib:make-action-client "/nav_pcontroller/move_base" "move_base_msgs/MoveBaseAction"))
@@ -65,6 +65,19 @@
                                  :pose (cl-tf:from-msg pose)
                                  :target-frame frame)))
 
+(defun get-shelf-pose (shelf-id &optional (side "middle"))
+  (transform-posestamped-into-frame
+   "/map"
+   (roslisp:make-msg "geometry_msgs/PoseStamped"
+                     (std_msgs-msg:frame_id std_msgs-msg:header)
+                     (get-perceived-frame-id shelf-id)
+                     (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+                     1
+                     (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                     (if (string= side "front") *front-of-shelf*
+                         (if (string= side "middle") *mid-of-shelf* *end-of-shelf*)))))
+  
+
 (defun move-base-absolute (target-pose)
   "Move base to target PoseStamped"
   (actionlib:send-goal-and-wait *navp-controller-actionclient*
@@ -72,7 +85,7 @@
                          :target_pose
                          (transform-posestamped-into-frame "/map" target-pose))))
 
-(defun traverse-to-shelf (shelf-id &optional (side "front"))
+(defun traverse-to-shelf (shelf-id &optional (side "middle"))
   "Robot drives to front or end of shelf. Contains safetymeasures to make sure robot doesnt bump into things"
   (roslisp:ros-info "traverse-to-shelf" "calculation traversion to ~a" shelf-id)
   (let ((cur-pos
@@ -109,9 +122,26 @@
             (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
             *right-orientation*))))))
 
-(actionlib:def-exec-callback addition (testValue)
+(actionlib:def-exec-callback addition (type shelfid floorid pose)
   (roslisp:ros-info (callback) "callback called")
-  (actionlib:succeed-current :testResult (+ 1 testValue)))
+  
+  ;(actionlib:succeed-current :testResult (+ 1 testValue)))
+  )
+
+(defun decide-plan (type shelfid floorid pose)
+  (top-level
+    (cram-process-modules:with-process-modules-running (motion-module)
+      (cond
+        ((eql type 0)
+         (build-driving-plan shelfid pose))
+        ((eql type 1)
+         (build-arm-movement-plan pose floorid :upper))
+        ((eql type 2)
+         (build-arm-movement-plan pose floorid :lower))
+        ((eql type 3)
+         (build-scanning-plan shelfid floorid :upper))
+        ((eql type 4)
+         (build-scanning-plan shelfid floorid :lower))))))
 
 (defun mark-shelf (shelf-id)
   "Visualize shelf front end end markings. For debugging purposes"

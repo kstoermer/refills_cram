@@ -4,31 +4,56 @@
 
 (defun main ()
   "Main Method later to be called from service"
-  (roslisp:with-ros-node ("talker")
+  (roslisp:start-ros-node "talker")
     (init-lowlevel)
     (init-giskard-wrapper)
-    (wait-duration 1)
-    ;;drive line
-    (move-arm-drivepos)
-    (move-base-absolute *start-pos*)
-    (baseboard-pose)
-    (move-base-absolute *end-pos*)
     ;;register shelves
     (let ((shelf-ids
             (add-shelves *fake-shelf-list* (add-shelf-system))))
-      (move-arm-drivepos)
+      (setf *registered-shelf-ids* shelf-ids)
       (loop for shelf-id in shelf-ids
             for i from 0 to 10 do
-        (mark-shelf shelf-id)
-        (ros-info "main" "traversing to front of shelf ~a" shelf-id)
-        (traverse-to-shelf shelf-id "middle")
-        (floor-detection-pose2)
-        (wait-duration 1)
-        (floor-detection-pose)
-        (ros-info "main" "gibt zurueck ~a" (nth i *fake-floors*))
-        (add-shelf-floor shelf-id (cdr (nth i *fake-floors*)))
-        (wait-duration 10)))
+              (add-shelf-floor shelf-id (cdr (nth i *fake-floors*))))
+      (print shelf-ids)
     (roslisp:spin-until (= 0 1) 2)))
+
+(defun build-driving-plan (?shelfid ?pose &optional (?shelfpos "middle"))
+  (cram-executive:perform
+   (if (string= ?shelfid "")
+       (an action (type driving) (PoseStamped ?pose))
+       (an action (type driving) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside ?shelfpos)))))))
+
+(defun build-driving-motion (?action)
+  (let ((?loc (donbot-action-loc ?action)))
+    (cram-executive:perform
+     (a motion (type driving) (loc ?loc)))))
+
+(defun build-arm-movement-plan (?pose ?floorid ?armpos)
+  (print "lel")
+  (cram-executive:perform
+   (if (string= ?floorid "")
+       (an action (type armMovement) (loc (a location (PoseStamped ?pose))))
+       (an action (type armMovement) (loc (a location (type :flooring) (KnowrobID ?floorid) (Armpos ?armpos)))))))
+
+(defun build-arm-movement-motion (?action)
+  (print ?action)
+  (let ((?loc (donbot-action-loc ?action)))
+    (cram-executive:perform
+     (a motion (type movingArm) (loc ?loc)))))
+
+(defun build-scanning-plan (?shelfid ?floorid ?armpos)
+  (cram-executive:perform
+   (if (string= ?floorid "")
+       (a action (type scanning) (ShelfID ?shelfid) (PositionOfArm ?armpos))
+       (a action (type scanning) (FloorID ?floorid) (PositionOfArm ?armpos)))))
+
+(defun scan-one-shelf-plan (action)
+  (print action))
+  ;;(build-driving-plan (donbot-action-shelfid action) nil))
+
+(defun scan-multiple-shelfs-plan (action)
+  (build-driving-plan (donbot-action-shelfid action) nil))
+   
 
 (defun add-shelf-system ()
   "Adds one Shelf-System and returns his id"

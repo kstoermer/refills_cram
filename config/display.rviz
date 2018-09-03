@@ -251,7 +251,6 @@ Visualization Manager:
       Name: Marker
       Namespaces:
         belief_state: true
-        planning_namespace: true
       Queue Size: 100
       Value: true
     - Class: rviz/Axes
@@ -301,10 +300,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.305398822
+      Pitch: 0.495398879
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.86720705
+      Yaw: 5.59220552
     Saved: ~
 Window Geometry:
   Displays:

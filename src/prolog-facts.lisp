@@ -2,12 +2,75 @@
 
 (defstruct donbot-movement
   "Represents a motion."
-  (PoseStamped))
+  (loc))
+
+(defstruct donbot-action
+  "Represents donbot action"
+  (loc))
+  
 
 (def-fact-group donbot-movement-designators (motion-grounding)
   
-  ;; drive in simple way
-  (<- (desig:motion-grounding ?desig (simple-drive ?motion))
+  ;; drive to a pose
+  (<- (desig:motion-grounding ?desig (drive-to-pos ?motion))
     (desig-prop ?desig (:type :driving))
-    (desig-prop ?desig (:PoseStamped ?PoseStamped))
-    (lisp-fun make-donbot-movement :PoseStamped ?PoseStamped ?motion)))
+    (desig-prop ?desig (:loc ?loc))
+    (lisp-fun make-donbot-movement :loc ?loc ?motion))
+  
+  ;; Move Arm to pos  
+  (<- (desig:motion-grounding ?desig (move-arm-to-pos ?motion))
+    (desig-prop ?desig (:type :movingArm))
+    (desig-prop ?desig (:loc ?loc))
+    (lisp-fun make-donbot-movement :loc ?loc ?motion)))
+
+(def-fact-group donbot-action-designators (action-grounding)
+
+  ;; simple drive to location action
+  (<- (desig:action-grounding ?desig (build-driving-motion ?action))
+    (desig-prop ?desig (:type :driving))
+    (desig-prop ?desig (:loc ?loc))
+    (lisp-fun make-donbot-action :loc ?loc ?action))
+
+  ;; simple move arm to pos action
+  (<- (desig:action-grounding ?desig (build-arm-movement-motion ?action))
+    (desig-prop ?desig (:type :armMovement))
+    (desig-prop ?desig (:loc ?loc))
+    (lisp-fun make-donbot-action :loc ?loc ?action))
+
+  
+  ;; drive to shelf and scan flooring
+  (<- (desig:action-grounding ?desig (scan-one-shelf-plan ?action))
+    (desig-prop ?desig (:type :scanning))
+    (desig-prop ?desig (:FloorID ?FloorID))
+    (desig-prop ?desig (:PositionOfArm ?PositionOfArm))
+    (lisp-fun make-donbot-action :loc ?loc ?action))
+  
+  ;; drive to shelf and scan every floor
+  (<- (desig:action-grounding ?desig (scan-multiple-shelfs-plan ?action))
+    (desig-prop ?desig (:type :scanning))
+    (desig-prop ?desig (:ShelfID ?ShelfID))
+    (desig-prop ?desig (:PositionOfArm ?PositionOfArm))
+    (lisp-fun make-donbot-action :loc ?loc ?action)))
+  
+(def-fact-group available-donbot-process-modules (available-process-module matching-process-module)
+
+  (<- (available-process-module motion-module))
+
+  (<- (matching-process-module ?desig motion-module)
+    (desig-prop ?desig (:type :driving)))
+  (<- (matching-process-module ?desig motion-module)
+    (desig-prop ?desig (:type :movingArm))))
+
+(defun get-location (designator)
+  (with-desig-props (type PoseStamped KnowrobID Shelfside) designator
+    (if (eql PoseStamped nil)
+        (ecase type
+          (:shelf
+           (list (get-shelf-pose KnowrobID Shelfside)))
+          (:flooring
+           (list "flooring location")))
+        (return-from get-location (list PoseStamped)))))
+
+(register-location-generator 5 get-location)
+
+
