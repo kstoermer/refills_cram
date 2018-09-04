@@ -11,16 +11,19 @@
     (let ((shelf-ids
             (add-shelves *fake-shelf-list* (add-shelf-system))))
       (setf *registered-shelf-ids* shelf-ids)
-      (loop for shelf-id in shelf-ids
-            for i from 0 to 10 do
-              (add-shelf-floor shelf-id (cdr (nth i *fake-floors*))))
       (print shelf-ids)
     (roslisp:spin-until (= 0 1) 2)))
 
-(defun build-driving-plan (?shelfid ?pose &optional (?shelfpos "middle"))
+(defun insertFakeFlooringsForShelf (shelfid)
+  (loop for id in *registered-shelf-ids*
+        for i from 1 to 10 do
+          (if (string= id shelfid)
+              (add-shelf-floor shelfid (cdr (nth (- i 1) *fake-floors*))))))
+
+(defun build-driving-plan (?shelfid ?pose &optional (?shelfpos :middle))
   (cram-executive:perform
    (if (string= ?shelfid "")
-       (an action (type driving) (PoseStamped ?pose))
+       (an action (type driving) (loc (a location (PoseStamped ?pose))))
        (an action (type driving) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside ?shelfpos)))))))
 
 (defun build-driving-motion (?action)
@@ -29,14 +32,29 @@
      (a motion (type driving) (loc ?loc)))))
 
 (defun build-arm-movement-plan (?pose ?floorid ?armpos)
-  (print "lel")
   (cram-executive:perform
    (if (string= ?floorid "")
        (an action (type armMovement) (loc (a location (PoseStamped ?pose))))
        (an action (type armMovement) (loc (a location (type :flooring) (KnowrobID ?floorid) (Armpos ?armpos)))))))
 
+(defun build-detect-layers-in-shelf-plan (?shelfid)
+  (cram-executive:perform
+   (an action (type detectLayersInShelf) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside :middle)))))
+  (insertfakeflooringsforshelf ?shelfid))
+
+(defun resolve-detect-layers-in-shelf-plan (?action)
+  (let ((?loc (donbot-action-loc ?action)))
+    (print ?loc)
+    (cram-executive:perform
+     (an action (type driving) (loc ?loc)))
+    (cram-executive:perform
+     (an action (type detectLayersHere)))))
+
+(defun resolve-detect-layers-here-motion (?action)
+  (cram-executive:perform
+   (a motion (type detectLayers))))
+
 (defun build-arm-movement-motion (?action)
-  (print ?action)
   (let ((?loc (donbot-action-loc ?action)))
     (cram-executive:perform
      (a motion (type movingArm) (loc ?loc)))))
@@ -52,8 +70,8 @@
   ;;(build-driving-plan (donbot-action-shelfid action) nil))
 
 (defun scan-multiple-shelfs-plan (action)
-  (build-driving-plan (donbot-action-shelfid action) nil))
-   
+  ;;(build-driving-plan (donbot-action-shelfid action) nil))
+   (print "In"))
 
 (defun add-shelf-system ()
   "Adds one Shelf-System and returns his id"

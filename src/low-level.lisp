@@ -65,17 +65,21 @@
                                  :pose (cl-tf:from-msg pose)
                                  :target-frame frame)))
 
-(defun get-shelf-pose (shelf-id &optional (side "middle"))
-  (transform-posestamped-into-frame
-   "/map"
-   (roslisp:make-msg "geometry_msgs/PoseStamped"
-                     (std_msgs-msg:frame_id std_msgs-msg:header)
-                     (get-perceived-frame-id shelf-id)
-                     (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
-                     1
-                     (geometry_msgs-msg:position geometry_msgs-msg:pose)
-                     (if (string= side "front") *front-of-shelf*
-                         (if (string= side "middle") *mid-of-shelf* *end-of-shelf*)))))
+(defun get-shelf-pose (shelf-id &optional (side :middle))
+  (let ((shelf-pos
+          (transform-posestamped-into-frame
+           "/map"
+           (roslisp:make-msg "geometry_msgs/PoseStamped"
+                             (std_msgs-msg:frame_id std_msgs-msg:header)
+                             (get-perceived-frame-id shelf-id)
+                             (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+                             1
+                             (geometry_msgs-msg:position geometry_msgs-msg:pose)
+                             (if (eql side :front) *front-of-shelf*
+                                 (if (eql side :middle) *mid-of-shelf* *end-of-shelf*))))))
+    (roslisp:modify-message-copy
+     shelf-pos
+     (geometry_msgs-msg:orientation geometry_msgs-msg:pose) *right-orientation*)))
   
 
 (defun move-base-absolute (target-pose)

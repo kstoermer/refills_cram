@@ -9,8 +9,10 @@
       (drive-to-pos
        (move-base-absolute (reference (donbot-movement-loc donbotMovement))))
       (move-arm-to-pos
-       (print (reference (donbot-movement-loc donbotMovement)))
-       (move-arm-to-pose (reference (donbot-movement-loc donbotMovement)))))))
+       (move-arm-to-pose (reference (donbot-movement-loc donbotMovement))))
+      (detect-layers
+       (floor-detection-pose2)
+       (floor-detection-pose)))))
 
 (defun start (&optional ?pose ?shelfid)
   (top-level

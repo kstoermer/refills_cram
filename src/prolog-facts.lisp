@@ -21,7 +21,13 @@
   (<- (desig:motion-grounding ?desig (move-arm-to-pos ?motion))
     (desig-prop ?desig (:type :movingArm))
     (desig-prop ?desig (:loc ?loc))
-    (lisp-fun make-donbot-movement :loc ?loc ?motion)))
+    (lisp-fun make-donbot-movement :loc ?loc ?motion))
+
+  ;; Detect Layers movement
+  (<- (desig:motion-grounding ?desig (detect-layers ?motion))
+    (desig-prop ?desig (:type :detectLayers))
+    (lisp-fun make-donbot-movement ?motion)))
+
 
 (def-fact-group donbot-action-designators (action-grounding)
 
@@ -37,7 +43,17 @@
     (desig-prop ?desig (:loc ?loc))
     (lisp-fun make-donbot-action :loc ?loc ?action))
 
-  
+  ;; detect layers in shelf
+  (<- (desig:action-grounding ?desig (resolve-detect-layers-in-shelf-plan ?action))
+    (desig-prop ?desig (:type :detectLayersInShelf))
+    (desig-prop ?desig (:loc ?loc))
+    (lisp-fun make-donbot-action :loc ?loc ?action))
+
+  ;; simple move arm to pos action
+  (<- (desig:action-grounding ?desig (resolve-detect-layers-here-motion ?action))
+    (desig-prop ?desig (:type :detectLayersHere))
+    (lisp-fun make-donbot-action ?action))
+
   ;; drive to shelf and scan flooring
   (<- (desig:action-grounding ?desig (scan-one-shelf-plan ?action))
     (desig-prop ?desig (:type :scanning))
@@ -59,7 +75,9 @@
   (<- (matching-process-module ?desig motion-module)
     (desig-prop ?desig (:type :driving)))
   (<- (matching-process-module ?desig motion-module)
-    (desig-prop ?desig (:type :movingArm))))
+    (desig-prop ?desig (:type :movingArm)))
+  (<- (matching-process-module ?desig motion-module)
+    (desig-prop ?desig (:type :detectLayers))))
 
 (defun get-location (designator)
   (with-desig-props (type PoseStamped KnowrobID Shelfside) designator

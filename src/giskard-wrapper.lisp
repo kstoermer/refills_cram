@@ -93,18 +93,12 @@
                                 (actionlib:make-action-goal *actionclient-giskard*
                                   (giskard_msgs-msg:controllers)
                                   (vector
-                                   (roslisp:make-msg "giskard_msgs/Controller" 
-                                                     (std_msgs-msg:frame_id std_msgs-msg:header giskard_msgs-msg:goal_pose)
-                                                     "base_link"
-                                                     (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose giskard_msgs-msg:goal_pose)
-                                                     1
-                                                     (geometry_msgs-msg:x geometry_msgs-msg:position geometry_msgs-msg:pose giskard_msgs-msg:goal_pose)
-                                                     0
-                                                     (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose giskard_msgs-msg:goal_pose)
-                                                     1
-                                                     (giskard_msgs-msg:root_link) refills-cram::*root-link*
-                                                     (giskard_msgs-msg:tip_link) refills-cram::*tip-link*
-                                                     (giskard_msgs-msg:p_gain) 3
-                                                     (giskard_msgs-msg:weight) 1.0
-                                                     (giskard_msgs-msg:type) 2
-                                                     (giskard_msgs-msg:max_speed) 10)))))
+                                   (roslisp:make-msg
+                                    "giskard_msgs/Controller"
+                                    (giskard_msgs-msg:goal_pose) PoseStamped
+                                    (giskard_msgs-msg:root_link) refills-cram::*root-link*
+                                    (giskard_msgs-msg:tip_link) refills-cram::*tip-link*
+                                    (giskard_msgs-msg:p_gain) 3
+                                    (giskard_msgs-msg:weight) 1.0
+                                    (giskard_msgs-msg:type) 2
+                                    (giskard_msgs-msg:max_speed) 10)))))
