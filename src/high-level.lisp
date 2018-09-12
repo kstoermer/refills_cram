@@ -44,7 +44,6 @@
 
 (defun resolve-detect-layers-in-shelf-plan (?action)
   (let ((?loc (donbot-action-loc ?action)))
-    (print ?loc)
     (cram-executive:perform
      (an action (type driving) (loc ?loc)))
     (cram-executive:perform
@@ -90,6 +89,23 @@
     (json-prolog:prolog-simple
      (format nil "object_perception_affordance_frame_name(\'~a\', F)" object-id)))))
 
+(defun get-shelf-for-floor (floor-id)
+  "Gets floorids for every floor in a shelf"
+  (get-real-string
+   (get-result-of-query
+    "?Meter"
+    (json-prolog:prolog-simple
+     (format nil "owl_individual_of(\'~a\', 'http://knowrob.org/kb/dm-market.owl#DMShelfLayer'), rdf_has(Meter, knowrob:properPhysicalParts, \'~a\'), owl_individual_of(Meter, 'http://knowrob.org/kb/dm-market.owl#DMShelfFrame')." floor-id floor-id)))))
+
+(defun get-floors-for-shelf (shelf-id)
+  "Gets floorids for every floor in a shelf"
+  (get-real-string-list
+   (get-result-of-query
+    "?Layers"
+    (json-prolog:prolog-simple
+     (format nil "owl_individual_of(\'~a\', 'http://knowrob.org/kb/dm-market.owl#DMShelfFrame'), findall(_Layer, (rdf_has(\'~a\', knowrob:properPhysicalParts, _Layer), owl_individual_of(_Layer, 'http://knowrob.org/kb/dm-market.owl#DMShelfLayer')), Layers)." shelf-id shelf-id)))))
+
+
 (defun add-shelves (list-of-shelfes shelf-system-id)
   "Adds shelves into knowrob and world returns list of shelf ids"
   (loop for shelf in list-of-shelfes do
@@ -133,6 +149,12 @@
 (defun get-real-string (string-query)
   "Extracts String from wierd knowrob return"
   (subseq (string string-query) 2 (- (length (string string-query)) 2)))
+
+(defun get-real-string-list (list)
+  "Extracts String in list from wierd knowrob return"
+  (map 'list
+       (lambda (x) (subseq (string x) 1 (- (length (string x)) 1)))
+       list))
 
 (defun pose-to-prolog (pose-stamped)
   "Prolog need special format to percieve a geometry_msgs/PoseStamped"

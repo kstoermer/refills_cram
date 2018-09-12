@@ -7,6 +7,8 @@
 (defvar *dm_market* "dmshop")
 (defvar *shelf_system* (format nil "~a:'DMShelfSystem'" *dm_market*))
 (defvar *shelf_meter* (format nil "~a:'DMShelfFrameFrontStore'" *dm_market*))
+(defvar *shelf_layer* (format nil "~a:'DMShelfLayer'" *dm_market*))
+(defvar *shelf_frame* (format nil "~a:'DMShelfFrame'" *dm_market*))
 (defvar *shelf_floor_standing* (format nil "~a:'DMShelfLayer4TilesFront'" *dm_market*))
 (defvar *shelf_floor_standing_ground* (format nil "~a:'DMShelfLayer5TilesFront'" *dm_market*))
 (defvar *shelf_floor_mounting* (format nil "~a:'DMShelfLayerMountingFront'" *dm_market*))
