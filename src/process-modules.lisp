@@ -12,6 +12,7 @@
        (move-arm-to-pose (reference (donbot-movement-loc donbotMovement))))
       (detect-layers
        (floor-detection-pose2)
+       (sleep 2)
        (floor-detection-pose)))))
 
 (defun start (&optional ?pose ?shelfid)

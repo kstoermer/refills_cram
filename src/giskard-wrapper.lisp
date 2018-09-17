@@ -97,8 +97,17 @@
                                     "giskard_msgs/Controller"
                                     (giskard_msgs-msg:goal_pose) PoseStamped
                                     (giskard_msgs-msg:root_link) refills-cram::*root-link*
-                                    (giskard_msgs-msg:tip_link) refills-cram::*tip-link*
+                                    (giskard_msgs-msg:tip_link) "rs_camera_link"
                                     (giskard_msgs-msg:p_gain) 3
                                     (giskard_msgs-msg:weight) 1.0
                                     (giskard_msgs-msg:type) 2
+                                    (giskard_msgs-msg:max_speed) 10)
+                                   (roslisp:make-msg
+                                    "giskard_msgs/Controller"
+                                    (giskard_msgs-msg:goal_pose) PoseStamped
+                                    (giskard_msgs-msg:root_link) refills-cram::*root-link*
+                                    (giskard_msgs-msg:tip_link) "rs_camera_link"
+                                    (giskard_msgs-msg:p_gain) 3
+                                    (giskard_msgs-msg:weight) 1.0
+                                    (giskard_msgs-msg:type) 3
                                     (giskard_msgs-msg:max_speed) 10)))))

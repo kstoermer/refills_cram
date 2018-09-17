@@ -1,6 +1,7 @@
 (in-package :refills-cram)
 
 (defvar *registered-shelf-ids* nil)
+(defvar *directive* (list ':front ':end))
 
 (defun main ()
   "Main Method later to be called from service"
@@ -13,6 +14,11 @@
       (setf *registered-shelf-ids* shelf-ids)
       (print shelf-ids)
     (roslisp:spin-until (= 0 1) 2)))
+
+(defun rev (list)
+  (do ((list list (rest list))
+       (reversed '() (list* (first list) reversed)))
+      ((endp list) reversed)))
 
 (defun insertFakeFlooringsForShelf (shelfid)
   (loop for id in *registered-shelf-ids*
@@ -27,15 +33,10 @@
        (an action (type driving) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside ?shelfpos)))))))
 
 (defun build-driving-motion (?action)
+  (print ?action)
   (let ((?loc (donbot-action-loc ?action)))
     (cram-executive:perform
      (a motion (type driving) (loc ?loc)))))
-
-(defun build-arm-movement-plan (?pose ?floorid ?armpos)
-  (cram-executive:perform
-   (if (string= ?floorid "")
-       (an action (type armMovement) (loc (a location (PoseStamped ?pose))))
-       (an action (type armMovement) (loc (a location (type :flooring) (KnowrobID ?floorid) (Armpos ?armpos)))))))
 
 (defun build-detect-layers-in-shelf-plan (?shelfid)
   (cram-executive:perform
@@ -44,10 +45,12 @@
 
 (defun resolve-detect-layers-in-shelf-plan (?action)
   (let ((?loc (donbot-action-loc ?action)))
-    (cram-executive:perform
-     (an action (type driving) (loc ?loc)))
-    (cram-executive:perform
-     (an action (type detectLayersHere)))))
+    (let ((Shelfid (desig:desig-prop-value ?loc :KnowrobID)))
+      (cram-executive:perform
+       (an action (type driving) (loc ?loc)))
+      (cram-executive:perform
+       (an action (type detectLayersHere)))
+      (insertfakeflooringsforshelf Shelfid))))
 
 (defun resolve-detect-layers-here-motion (?action)
   (cram-executive:perform
@@ -58,19 +61,50 @@
     (cram-executive:perform
      (a motion (type movingArm) (loc ?loc)))))
 
-(defun build-scanning-plan (?shelfid ?floorid ?armpos)
-  (cram-executive:perform
-   (if (string= ?floorid "")
-       (a action (type scanning) (ShelfID ?shelfid) (PositionOfArm ?armpos))
-       (a action (type scanning) (FloorID ?floorid) (PositionOfArm ?armpos)))))
+(defun scan-one-floor-plan (?action)
+  (let ((?loc (donbot-action-loc ?action)))
+    (let ((?Floor-id (desig:desig-prop-value ?loc :KnowrobID)))
+      (let ((?Shelf-id (get-shelf-for-floor ?Floor-id)))
+        (let ((?first-directive (first *directive*)))
+          (let ((?second-directive (second *directive*)))
+            (cram-executive:perform
+             (an action (type driving) (loc
+                                        (a location
+                                           (type shelf)
+                                           (KnowrobID ?Shelf-id)
+                                           (Shelfside ?first-directive)))))
+            (cram-executive:perform
+             (an action (type armMovement) (loc ?loc)))
+            (cram-executive:perform
+             (an action (type driving) (loc
+                                        (a location
+                                           (type shelf)
+                                           (KnowrobID ?Shelf-id)
+                                           (Shelfside ?second-directive))))))))
+      (setf *directive* (rev *directive*)))))
 
-(defun scan-one-shelf-plan (action)
-  (print action))
-  ;;(build-driving-plan (donbot-action-shelfid action) nil))
-
-(defun scan-multiple-shelfs-plan (action)
-  ;;(build-driving-plan (donbot-action-shelfid action) nil))
-   (print "In"))
+(defun scan-multiple-floors-plan (?action)
+  (let ((?loc (donbot-action-loc ?action)))
+    (let ((?Shelf-id (desig:desig-prop-value ?loc :KnowrobID)))
+      (cram-executive:perform
+       (an action (type detectLayersInShelf) (loc
+                                              (a location
+                                                 (type shelf)
+                                                 (KnowrobID ?Shelf-id)
+                                                 (Shelfside :middle)))))
+      (let ((floorlist (get-floors-for-shelf ?Shelf-id)))
+        (loop for ?floorid in floorlist do
+          (cram-executive:perform
+           (an action (type scan-floor) (loc
+                                         (a location
+                                            (type flooring-board)
+                                            (KnowrobID ?floorid))))))
+        (loop for ?floorid in floorlist do
+          (cram-executive:perform
+           (an action (type scan-floor) (loc
+                                         (a location
+                                            (type flooring-contents)
+                                            (KnowrobID ?floorid))))))))))
 
 (defun add-shelf-system ()
   "Adds one Shelf-System and returns his id"

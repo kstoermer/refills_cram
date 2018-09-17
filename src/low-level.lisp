@@ -22,7 +22,7 @@
                     (x)
                     0
                     (y)
-                    -1.3
+                    -0.8
                     (z)
                     0))
 
@@ -31,7 +31,7 @@
                     (x)
                     0.5
                     (y)
-                    -1.3
+                    -1.2
                     (z)
                     0))
 
@@ -40,7 +40,7 @@
                     (x)
                     1
                     (y)
-                    -1.3
+                    -0.8
                     (z)
                     0))
                     
@@ -50,7 +50,7 @@
   (setf *marker-publisher*
         (roslisp:advertise "/visualization_marker" "visualization_msgs/Marker"))
   (actionlib:start-action-server "donbot" "refills_cram_msgs/donbotAction"
-                                 #'addition :separate-thread t)
+                                 #'action-callback :separate-thread t)
   (setf *navp-controller-actionclient*
         (actionlib:make-action-client "/nav_pcontroller/move_base" "move_base_msgs/MoveBaseAction"))
   (setf *buffer-client*
@@ -126,26 +126,42 @@
             (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
             *right-orientation*))))))
 
-(actionlib:def-exec-callback addition (type shelfid floorid pose)
+(actionlib:def-exec-callback action-callback (type shelfid floorid pose)
   (roslisp:ros-info (callback) "callback called")
-  
-  ;(actionlib:succeed-current :testResult (+ 1 testValue)))
+  (decide-plan type shelfid floorid pose)
+  (actionlib:succeed-current :result 1.0)
   )
 
-(defun decide-plan (type shelfid floorid pose)
-  (top-level
+(defun decide-plan (type ?shelfid ?floorid ?pose)
+  (cram-language:top-level
     (cram-process-modules:with-process-modules-running (motion-module)
-      (cond
-        ((eql type 0)
-         (build-driving-plan shelfid pose))
-        ((eql type 1)
-         (build-arm-movement-plan pose floorid :upper))
-        ((eql type 2)
-         (build-arm-movement-plan pose floorid :lower))
-        ((eql type 3)
-         (build-scanning-plan shelfid floorid :upper))
-        ((eql type 4)
-         (build-scanning-plan shelfid floorid :lower))))))
+      (case type
+        ((0)
+         (cram-executive:perform
+          (if (string= ?shelfid "")
+              (an action (type driving) (loc
+                                         (a location (type pose) (PoseStamped ?pose))))
+              (an action (type driving) (loc
+                                         (a location (type shelf) (KnowrobID ?shelfid) (Shelfside :middle)))))))
+        ((1)
+         (cram-executive:perform
+          (if (string= ?shelfid "")
+              (an action (type detectLayersInShelf) (loc
+                                                     (a location (type pose) (PoseStamped pose))))
+              (an action (type detectLayersInShelf) (loc
+                                                     (a location (type shelf) (KnowrobID ?shelfid) (Shelfside :middle)))))))
+        ((2)
+         (cram-executive:perform
+          (an action (type scan-floor) (loc
+                                        (a location (type flooring-board) (KnowrobID ?floorid))))))
+        ((3)
+         (cram-executive:perform
+          (an action (type scan-floor) (loc
+                                      (a location (type flooring-contents) (KnowrobID ?floorid))))))
+        ((4)
+         (cram-executive:perform
+          (an action (type scanning) (loc
+                                      (a location (type shelf) (KnowrobID ?shelfid))))))))))
 
 (defun mark-shelf (shelf-id)
   "Visualize shelf front end end markings. For debugging purposes"
@@ -167,7 +183,59 @@
                      )
    (random 100000)
    (get-perceived-frame-id shelf-id))
-   )
+  )
+
+(defun look-at-floor-position (floor-id)
+  (let ((newz 
+          (geometry_msgs-msg:z 
+           (geometry_msgs-msg:position 
+            (geometry_msgs-msg:pose
+             (refills-cram::transform-posestamped-into-frame
+              "base_footprint"
+              (roslisp:make-msg
+               "geometry_msgs/PoseStamped"
+               (std_msgs-msg:frame_id std_msgs-msg:header)
+               (refills-cram::get-perceived-frame-id floor-id)
+               (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+               1)))))))
+    (roslisp:make-msg
+     "geometry_msgs/PoseStamped"
+     (geometry_msgs-msg:y geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+     0.707
+     (geometry_msgs-msg:x geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+     -0.707
+     (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
+     (- newz 0.1)
+     (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
+     -0.7
+     (std_msgs-msg:frame_id std_msgs-msg:header)
+     "base_footprint")))
+
+(defun look-into-floor-position (floor-id)
+  (let ((newz 
+          (geometry_msgs-msg:z 
+           (geometry_msgs-msg:position 
+            (geometry_msgs-msg:pose
+             (refills-cram::transform-posestamped-into-frame
+              "base_footprint"
+              (roslisp:make-msg
+               "geometry_msgs/PoseStamped"
+               (std_msgs-msg:frame_id std_msgs-msg:header)
+               (refills-cram::get-perceived-frame-id floor-id)
+               (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+               1)))))))
+    (roslisp:make-msg
+     "geometry_msgs/PoseStamped"
+     (geometry_msgs-msg:x geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+     -0.707
+     (geometry_msgs-msg:y geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+     0.707
+     (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
+     (+ newz 0.05)
+     (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
+     -0.7
+     (std_msgs-msg:frame_id std_msgs-msg:header)
+     "base_footprint")))
 
 (defun publish-marker (pose id frame)
   "Pubish yellow sphere marker"
@@ -175,7 +243,7 @@
                      (roslisp:make-message "visualization_msgs/Marker" (frame_id header) frame
                                          ns "planning_namespace"
                                          id id
-                                         type 2
+                                         type 0
                                          action 0
                                          pose pose
                                          (x scale) 0.1

@@ -1,6 +1,5 @@
 <launch>
 
 	<include file="$(find refills_cram)/launch/donbot_giskard.launch" />
-	<!--node pkg="tf" type="static_transform_publisher" name="tranform" args="1 0 0 0 0 0 1 map base_link 100" /-->
-	<node pkg="refills_cram" type="main" name="refills_cram_main" output="screen" />
+	<!--node pkg="tf" type="static_transform_publisher" name="tranform" args="1 0 0 0 0 0 1 map base_link 100" / <node pkg="refills_cram" type="main" name="refills_cram_main" output="screen" />-->
 </launch>

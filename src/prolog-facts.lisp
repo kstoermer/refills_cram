@@ -49,23 +49,21 @@
     (desig-prop ?desig (:loc ?loc))
     (lisp-fun make-donbot-action :loc ?loc ?action))
 
-  ;; simple move arm to pos action
+  ;; detect layers woosh action
   (<- (desig:action-grounding ?desig (resolve-detect-layers-here-motion ?action))
     (desig-prop ?desig (:type :detectLayersHere))
     (lisp-fun make-donbot-action ?action))
 
   ;; drive to shelf and scan flooring
-  (<- (desig:action-grounding ?desig (scan-one-shelf-plan ?action))
-    (desig-prop ?desig (:type :scanning))
-    (desig-prop ?desig (:FloorID ?FloorID))
-    (desig-prop ?desig (:PositionOfArm ?PositionOfArm))
+  (<- (desig:action-grounding ?desig (scan-one-floor-plan ?action))
+    (desig-prop ?desig (:type :scan-floor))
+    (desig-prop ?desig (:loc ?loc))
     (lisp-fun make-donbot-action :loc ?loc ?action))
   
   ;; drive to shelf and scan every floor
-  (<- (desig:action-grounding ?desig (scan-multiple-shelfs-plan ?action))
+  (<- (desig:action-grounding ?desig (scan-multiple-floors-plan ?action))
     (desig-prop ?desig (:type :scanning))
-    (desig-prop ?desig (:ShelfID ?ShelfID))
-    (desig-prop ?desig (:PositionOfArm ?PositionOfArm))
+    (desig-prop ?desig (:loc ?loc))
     (lisp-fun make-donbot-action :loc ?loc ?action)))
   
 (def-fact-group available-donbot-process-modules (available-process-module matching-process-module)
@@ -85,8 +83,10 @@
         (ecase type
           (:shelf
            (list (get-shelf-pose KnowrobID Shelfside)))
-          (:flooring
-           (list "flooring location")))
+          (:flooring-board
+           (list (look-at-floor-position KnowrobID)))
+          (:flooring-contents
+           (list (look-into-floor-position KnowrobID))))
         (return-from get-location (list PoseStamped)))))
 
 (register-location-generator 5 get-location)

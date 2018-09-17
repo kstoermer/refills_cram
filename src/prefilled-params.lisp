@@ -116,7 +116,7 @@
    (cons 3 (list
             (list 0 0 0.15) (list 0 0.1 0.43) (list 0 0.1 0.68) (list 0 0.1 0.93) (list 0 0.1 1.18) (list 0 0.1 1.43)))))
 
-(defvar *tip-link* "camera_link")
+(defvar *tip-link* "camera_holder_link")
 (defvar *root-link* "base_link")
 (defvar *giskard-action-name* "/qp_controller/command")
 
