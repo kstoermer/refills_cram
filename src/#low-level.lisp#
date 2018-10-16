@@ -142,7 +142,7 @@
               (an action (type driving) (loc
                                          (a location (type pose) (PoseStamped ?pose))))
               (an action (type driving) (loc
-                                         (a location (type shelf) (KnowrobID ?shelfid) (Shelfside :front)))))))
+                                         (a location (type shelf) (KnowrobID ?shelfid) (Shelfside :left)))))))
         ((1)
          (cram-executive:perform
           (if (string= ?shelfid "")

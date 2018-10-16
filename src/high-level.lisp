@@ -33,7 +33,7 @@
        (an action (type driving) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside ?shelfpos)))))))
 
 (defun build-driving-motion (?action)
-  (print ?action)
+  (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (let ((?loc (donbot-action-loc ?action)))
     (cram-executive:perform
      (a motion (type driving) (loc ?loc)))))
@@ -44,6 +44,7 @@
   (insertfakeflooringsforshelf ?shelfid))
 
 (defun resolve-detect-layers-in-shelf-plan (?action)
+  (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (let ((?loc (donbot-action-loc ?action)))
     (let ((Shelfid (desig:desig-prop-value ?loc :KnowrobID)))
       (cram-executive:perform
@@ -52,16 +53,19 @@
        (an action (type detectLayersHere)))
       (insertfakeflooringsforshelf Shelfid))))
 
-(defun resolve-detect-layers-here-motion (?action)
+(defun resolve-detect-layers-here-motion (?actio)
+  (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (cram-executive:perform
    (a motion (type detectLayers))))
 
 (defun build-arm-movement-motion (?action)
+  (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (let ((?loc (donbot-action-loc ?action)))
     (cram-executive:perform
      (a motion (type movingArm) (loc ?loc)))))
 
 (defun scan-one-floor-plan (?action)
+  (ros-info (resolve-action-designator) "Actiondesignator-resolved")  
   (let ((?loc (donbot-action-loc ?action)))
     (let ((?Floor-id (desig:desig-prop-value ?loc :KnowrobID)))
       (let ((?Shelf-id (get-shelf-for-floor ?Floor-id)))
@@ -84,6 +88,7 @@
       (setf *directive* (rev *directive*)))))
 
 (defun scan-multiple-floors-plan (?action)
+  (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (let ((?loc (donbot-action-loc ?action)))
     (let ((?Shelf-id (desig:desig-prop-value ?loc :KnowrobID)))
       (cram-executive:perform

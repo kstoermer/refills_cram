@@ -78,17 +78,22 @@
     (desig-prop ?desig (:type :detectLayers))))
 
 (defun get-location (designator)
+  (ros-info (location-designator) "Location-designator resolved")
   (with-desig-props (type PoseStamped KnowrobID Shelfside) designator
     (if (eql PoseStamped nil)
         (ecase type
           (:shelf
+           (publish-marker (geometry_msgs-msg:pose (get-shelf-pose KnowrobID Shelfside)) (random 1000) "/map")
            (list (get-shelf-pose KnowrobID Shelfside)))
           (:flooring-board
+           (publish-marker (geometry_msgs-msg:pose (look-at-floor-position KnowrobID)) (random 1000) "/base_footprint")
            (list (look-at-floor-position KnowrobID)))
           (:flooring-contents
+           (publish-marker (geometry_msgs-msg:pose (look-into-floor-position KnowrobID)) (random 1000) "/base_footprint")
            (list (look-into-floor-position KnowrobID))))
         (return-from get-location (list PoseStamped)))))
 
 (register-location-generator 5 get-location)
+
 
 
