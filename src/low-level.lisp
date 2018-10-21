@@ -87,7 +87,10 @@
   (actionlib:send-goal-and-wait *navp-controller-actionclient*
                        (actionlib:make-action-goal *navp-controller-actionclient*
                          :target_pose
-                         (transform-posestamped-into-frame "/map" target-pose))))
+                         (modify-message-copy
+                          (transform-posestamped-into-frame "/map" target-pose)
+                          (std_msgs-msg:stamp geometry_msgs-msg:header)
+                          (+ (roslisp:ros-time) 0.1)))))
 
 (defun traverse-to-shelf (shelf-id &optional (side "middle"))
   "Robot drives to front or end of shelf. Contains safetymeasures to make sure robot doesnt bump into things"
@@ -185,6 +188,29 @@
    (get-perceived-frame-id shelf-id))
   )
 
+(defun drive-to-barcode-position (barcode)
+  (let ((drive-posi 
+          (refills-cram::transform-posestamped-into-frame 
+           "/map"
+           (roslisp:make-msg 
+            "geometry_msgs/PoseStamped"
+            (std_msgs-msg:frame_id geometry_msgs-msg:header)
+            (refills-cram::get-object-frame-id
+             (refills-cram::get-facing-for-barcode barcode))
+            (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
+            1
+            (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
+            -0.8
+            (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
+            0))))
+    (roslisp:modify-message-copy
+     drive-posi
+     (geometry_msgs-msg:orientation geometry_msgs-msg:pose) *right-orientation*)))
+      
+
+(defun look-at-facing-position (facing-id)
+  (print "this"))
+
 (defun look-at-floor-position (floor-id)
   (let ((newz 
           (geometry_msgs-msg:z 
@@ -233,7 +259,7 @@
      (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
      (+ newz 0.05)
      (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
-     -0.7
+     -0.5
      (std_msgs-msg:frame_id std_msgs-msg:header)
      "base_footprint")))
 

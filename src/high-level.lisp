@@ -3,6 +3,25 @@
 (defvar *registered-shelf-ids* nil)
 (defvar *directive* (list ':front ':end))
 
+(defvar *barcode_adder* (format nil "http://knowrob.org/kb/shop.owl#ProductWithAN"))
+(setf *seperator* (format nil "~a:'DMShelfSeparator4Tiles'" *dm_market*))
+(defvar *barcode* (format nil "~a:'DMShelfLabel'" *dm_market*))
+
+(defvar *list-of-barcodes* (list
+                            (cons 469671 0.1)
+                            (cons 252312 0.3)
+                            (cons 251219 0.5)
+                            (cons 251252 0.7)
+                            (cons 309649 0.9)))
+
+(defvar *list-of-seperators* (list
+                              0
+                              0.2
+                              0.4
+                              0.6
+                              0.8
+                              1))
+
 (defun main ()
   "Main Method later to be called from service"
   (roslisp:start-ros-node "talker")
@@ -53,7 +72,7 @@
        (an action (type detectLayersHere)))
       (insertfakeflooringsforshelf Shelfid))))
 
-(defun resolve-detect-layers-here-motion (?actio)
+(defun resolve-detect-layers-here-motion (?action)
   (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (cram-executive:perform
    (a motion (type detectLayers))))
@@ -120,6 +139,46 @@
     (json-prolog:prolog-simple
      (format nil "belief_new_object(~a, R), rdf_assert(R, knowrob:describedInMap, iaishop:\'IAIShop_0\', belief_state)" *shelf_system*)))))
 
+(defun add-facings-to-floor (floor-id)
+  "adds 5 facings to one floor"
+  (loop for x from 0 to 5 do
+    (add-seperator-for-shelf floor-id (nth x *list-of-seperators*)))
+  (loop for y from 0 to 4 do
+    (add-barcode-for-shelf floor-id (car (nth y *list-of-barcodes*)) (cdr (nth y *list-of-barcodes*)))))
+
+(defun add-seperator-for-shelf (floor-id x)
+  (json-prolog:prolog-simple
+   (format nil "belief_shelf_part_at(\'~a\', ~a, ~a, R)" floor-id *seperator* x)))
+
+(defun add-barcode-for-shelf (floor-id barcode x)
+  (json-prolog:prolog-simple
+   (format nil
+           "belief_shelf_barcode_at(\'~a\', ~a, dan(\'~a\'), ~a, R)"
+           floor-id
+           *barcode*
+           barcode
+           x)))
+
+(defun get-facing-for-barcode (barcode)
+  (get-real-string
+   (get-result-of-query
+    "?F"
+    (json-prolog:prolog-simple
+     (let ((barcode-string
+             (concatenate 'string *barcode_adder* barcode)))
+       (format nil
+               "shelf_facing(_, F), shelf_facing_product_type(F,\'~a\')" barcode-string))))))
+
+(defun get-floor-for-barcode (barcode)
+  (get-real-string
+   (get-result-of-query
+    "?F"
+    (json-prolog:prolog-simple
+     (let ((barcode-string
+             (concatenate 'string *barcode_adder* barcode)))
+       (format nil
+               "shelf_facing_product_type(E,\'~a\'), shelf_facing(F, E)" barcode-string))))))
+
 (defun get-perceived-frame-id (object-id)
   "Gets frameid for object, this id can be used as frame further on"
   (get-real-string
@@ -127,6 +186,13 @@
     "?F"
     (json-prolog:prolog-simple
      (format nil "object_perception_affordance_frame_name(\'~a\', F)" object-id)))))
+
+(defun get-object-frame-id (object-id)
+  (get-real-string
+   (get-result-of-query
+    "?R"
+    (json-prolog:prolog-simple
+     (format nil "object_frame_name(\'~a\', R)." object-id)))))
 
 (defun get-shelf-for-floor (floor-id)
   "Gets floorids for every floor in a shelf"

@@ -79,7 +79,7 @@
 
 (defun get-location (designator)
   (ros-info (location-designator) "Location-designator resolved")
-  (with-desig-props (type PoseStamped KnowrobID Shelfside) designator
+  (with-desig-props (type PoseStamped KnowrobID Shelfside Barcode) designator
     (if (eql PoseStamped nil)
         (ecase type
           (:shelf
@@ -90,7 +90,9 @@
            (list (look-at-floor-position KnowrobID)))
           (:flooring-contents
            (publish-marker (geometry_msgs-msg:pose (look-into-floor-position KnowrobID)) (random 1000) "/base_footprint")
-           (list (look-into-floor-position KnowrobID))))
+           (list (look-into-floor-position KnowrobID)))
+          (:barcode
+           (list (drive-to-barcode-position Barcode))))
         (return-from get-location (list PoseStamped)))))
 
 (register-location-generator 5 get-location)
