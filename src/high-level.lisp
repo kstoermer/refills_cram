@@ -8,12 +8,37 @@
 (defvar *barcode* (format nil "~a:'DMShelfLabel'" *dm_market*))
 
 (defvar *list-of-barcodes* (list
-                            (cons 469671 0.1)
-                            (cons 252312 0.3)
-                            (cons 251219 0.5)
-                            (cons 251252 0.7)
-                            (cons 309649 0.9)))
-
+                            (list 
+                             (cons 469671 0.1)
+                             (cons 252312 0.3)
+                             (cons 251219 0.5)
+                             (cons 251252 0.7)
+                             (cons 309649 0.9))
+                            (list
+                             (cons 469672 0.1)
+                             (cons 252313 0.3)
+                             (cons 251220 0.5)
+                             (cons 251253 0.7)
+                             (cons 309650 0.9))
+                            (list
+                             (cons 469673 0.1)
+                             (cons 252314 0.3)
+                             (cons 251221 0.5)
+                             (cons 251254 0.7)
+                             (cons 309651 0.9))
+                            (list
+                             (cons 469674 0.1)
+                             (cons 252315 0.3)
+                             (cons 251222 0.5)
+                             (cons 251255 0.7)
+                             (cons 309652 0.9))
+                            (list
+                             (cons 469675 0.1)
+                             (cons 252316 0.3)
+                             (cons 251223 0.5)
+                             (cons 251256 0.7)
+                             (cons 309653 0.9))))
+  
 (defvar *list-of-seperators* (list
                               0
                               0.2
@@ -21,6 +46,8 @@
                               0.6
                               0.8
                               1))
+
+(defvar *amount-of-scanned-floors* 0)
 
 (defun main ()
   "Main Method later to be called from service"
@@ -51,6 +78,14 @@
        (an action (type driving) (loc (a location (PoseStamped ?pose))))
        (an action (type driving) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside ?shelfpos)))))))
 
+(defun build-find-product-plan (?barcode)
+  (cram-executive:perform
+   (an action
+       (type find-product)
+       (loc
+        (a location (type barcode) (Barcode ?barcode))))))
+       
+
 (defun build-driving-motion (?action)
   (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (let ((?loc (donbot-action-loc ?action)))
@@ -62,10 +97,27 @@
    (an action (type detectLayersInShelf) (loc (a location (type :shelf) (KnowrobID ?shelfid) (Shelfside :middle)))))
   (insertfakeflooringsforshelf ?shelfid))
 
+(defun resolve-find-product-plan (?action)
+  (ros-info (resolve-action-designator) "Actiondesignator resolved")
+  (let* ((?loc (donbot-action-loc ?action))
+         (?barcode (desig-prop-value ?loc :Barcode))
+         (?floorid (get-floor-for-barcode ?barcode)))
+    (ros-info (resolve) "before plans")
+    (cram-executive:perform
+     (an action
+         (type driving)
+         (loc ?loc)))
+    (cram-executive:perform
+     (an action (type armMovement)
+         (loc
+          (a location
+             (type flooring-contents)
+             (KnowrobID ?floorid)))))))
+
 (defun resolve-detect-layers-in-shelf-plan (?action)
   (ros-info (resolve-action-designator) "Actiondesignator-resolved")
   (let ((?loc (donbot-action-loc ?action)))
-    (let ((Shelfid (desig:desig-prop-value ?loc :KnowrobID)))
+    (let ((Shelfid (desig-prop-value ?loc :KnowrobID)))
       (cram-executive:perform
        (an action (type driving) (loc ?loc)))
       (cram-executive:perform
@@ -104,7 +156,11 @@
                                            (type shelf)
                                            (KnowrobID ?Shelf-id)
                                            (Shelfside ?second-directive))))))))
-      (setf *directive* (rev *directive*)))))
+      (setf *directive* (rev *directive*))
+      (if (eql (desig-prop-value ?loc :type) :flooring-board)
+          (progn
+            (add-facings-to-floor ?Floor-id)
+            (setf *amount-of-scanned-floors* (+ *amount-of-scanned-floors* 1)))))))
 
 (defun scan-multiple-floors-plan (?action)
   (ros-info (resolve-action-designator) "Actiondesignator-resolved")
@@ -141,23 +197,29 @@
 
 (defun add-facings-to-floor (floor-id)
   "adds 5 facings to one floor"
+  (ros-info (adding-facings) "addes facings to floor")
   (loop for x from 0 to 5 do
     (add-seperator-for-shelf floor-id (nth x *list-of-seperators*)))
   (loop for y from 0 to 4 do
-    (add-barcode-for-shelf floor-id (car (nth y *list-of-barcodes*)) (cdr (nth y *list-of-barcodes*)))))
+    (add-barcode-for-shelf floor-id
+                           (car (nth y (nth *amount-of-scanned-floors* *list-of-barcodes*)))
+                           (cdr (nth y (nth *amount-of-scanned-floors* *list-of-barcodes*))))))
 
 (defun add-seperator-for-shelf (floor-id x)
   (json-prolog:prolog-simple
    (format nil "belief_shelf_part_at(\'~a\', ~a, ~a, R)" floor-id *seperator* x)))
 
 (defun add-barcode-for-shelf (floor-id barcode x)
-  (json-prolog:prolog-simple
-   (format nil
-           "belief_shelf_barcode_at(\'~a\', ~a, dan(\'~a\'), ~a, R)"
-           floor-id
-           *barcode*
-           barcode
-           x)))
+  ;;(json-prolog:prolog-simple
+   (let ((this 
+           (format nil
+                   "belief_shelf_barcode_at(\'~a\', ~a, dan(\'~a\'), ~a, R)"
+                   floor-id
+                   *barcode*
+                   barcode
+                   x)))
+     (print this)
+     (json-prolog:prolog-simple this)))
 
 (defun get-facing-for-barcode (barcode)
   (get-real-string

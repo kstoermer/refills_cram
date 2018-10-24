@@ -54,6 +54,12 @@
     (desig-prop ?desig (:type :detectLayersHere))
     (lisp-fun make-donbot-action ?action))
 
+  ;; find product and drive to location
+  (<- (desig:action-grounding ?desig (resolve-find-product-plan ?action))
+    (desig-prop ?desig (:type :find-product))
+    (desig-prop ?desig (:loc ?loc))
+    (lisp-fun make-donbot-action :loc ?loc ?action))
+  
   ;; drive to shelf and scan flooring
   (<- (desig:action-grounding ?desig (scan-one-floor-plan ?action))
     (desig-prop ?desig (:type :scan-floor))

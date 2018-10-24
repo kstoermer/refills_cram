@@ -129,13 +129,13 @@
             (geometry_msgs-msg:orientation geometry_msgs-msg:pose)
             *right-orientation*))))))
 
-(actionlib:def-exec-callback action-callback (type shelfid floorid pose)
+(actionlib:def-exec-callback action-callback (type shelfid floorid pose barcode)
   (roslisp:ros-info (callback) "callback called")
-  (decide-plan type shelfid floorid pose)
+  (decide-plan type shelfid floorid pose barcode)
   (actionlib:succeed-current :result 1.0)
   )
 
-(defun decide-plan (type ?shelfid ?floorid ?pose)
+(defun decide-plan (type ?shelfid ?floorid ?pose ?barcode)
   (cram-language:top-level
     (cram-process-modules:with-process-modules-running (motion-module)
       (case type
@@ -164,7 +164,11 @@
         ((4)
          (cram-executive:perform
           (an action (type scanning) (loc
-                                      (a location (type shelf) (KnowrobID ?shelfid))))))))))
+                                      (a location (type shelf) (KnowrobID ?shelfid))))))
+        ((5)
+         (cram-executive:perform
+          (an action (type find-product) (loc
+                                          (a location (type barcode) (Barcode ?barcode))))))))))
 
 (defun mark-shelf (shelf-id)
   "Visualize shelf front end end markings. For debugging purposes"
@@ -200,17 +204,13 @@
             (geometry_msgs-msg:w geometry_msgs-msg:orientation geometry_msgs-msg:pose)
             1
             (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
-            -0.8
+            -1.2
             (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
             0))))
     (roslisp:modify-message-copy
      drive-posi
      (geometry_msgs-msg:orientation geometry_msgs-msg:pose) *right-orientation*)))
       
-
-(defun look-at-facing-position (facing-id)
-  (print "this"))
-
 (defun look-at-floor-position (floor-id)
   (let ((newz 
           (geometry_msgs-msg:z 
@@ -259,7 +259,7 @@
      (geometry_msgs-msg:z geometry_msgs-msg:position geometry_msgs-msg:pose)
      (+ newz 0.05)
      (geometry_msgs-msg:y geometry_msgs-msg:position geometry_msgs-msg:pose)
-     -0.5
+     -0.7
      (std_msgs-msg:frame_id std_msgs-msg:header)
      "base_footprint")))
 
