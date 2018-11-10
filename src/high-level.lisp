@@ -59,6 +59,7 @@
             (add-shelves *fake-shelf-list* (add-shelf-system))))
       (setf *registered-shelf-ids* shelf-ids)
       (print shelf-ids)
+      (decide-plan 4 (first *registered-shelf-ids*) "" "" "")
     (roslisp:spin-until (= 0 1) 2)))
 
 (defun rev (list)

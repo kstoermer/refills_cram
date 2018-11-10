@@ -89,13 +89,10 @@
     (if (eql PoseStamped nil)
         (ecase type
           (:shelf
-           (publish-marker (geometry_msgs-msg:pose (get-shelf-pose KnowrobID Shelfside)) (random 1000) "/map")
            (list (get-shelf-pose KnowrobID Shelfside)))
           (:flooring-board
-           (publish-marker (geometry_msgs-msg:pose (look-at-floor-position KnowrobID)) (random 1000) "/base_footprint")
            (list (look-at-floor-position KnowrobID)))
           (:flooring-contents
-           (publish-marker (geometry_msgs-msg:pose (look-into-floor-position KnowrobID)) (random 1000) "/base_footprint")
            (list (look-into-floor-position KnowrobID)))
           (:barcode
            (list (drive-to-barcode-position Barcode))))

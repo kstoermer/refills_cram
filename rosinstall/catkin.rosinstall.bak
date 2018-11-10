@@ -87,15 +87,3 @@
     local-name: octomap_msgs
     uri: https://github.com/OctoMap/octomap_msgs.git
     version: kinetic-devel
-- git:
-    local-name: iai_cad_tools
-    uri: https://github.com/code-iai/iai_cad_tools.git
-    version: master
-- git:
-    local-name: refills
-    uri: https://github.com/kstoermer/refills.git
-    version: master
-- git:
-    local-name: refills_first_review
-    uri: https://github.com/refills-project/refills_first_review.git
-    version: master
