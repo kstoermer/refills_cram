@@ -12,6 +12,26 @@ wstool merge https://raw.githubusercontent.com/kstoermer/refills_cram/master/ros
 wstool update 
 rosdep install --ignore-src --from-paths . 
 cd ..                                      
-catkin build                               
+catkin_make                               
 source ~/my_ws/devel/setup.bash
 ```
+
+## known Problems
+
+Sometimes giskard_msgs needs an extra build. do this with:
+
+```
+catkin_make giskard_msgs_generate_messages
+```
+
+## starting this package
+
+- First load this package into your roslisp_repl. 
+- press ,
+- type 'r-l-s' then 'tab'
+- return
+- type 'refills_cram' then return
+- type 'refills-cram' then return
+- The package gets compiled now
+- execute the main-method with '(refills-cram:main)'
+- Main method will now load in the shelfes and start the actionserver

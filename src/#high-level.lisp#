@@ -218,6 +218,7 @@
            *barcode*
            barcode
            x)))
+
 (defun get-facing-for-barcode (barcode)
   (get-real-string
    (get-result-of-query
