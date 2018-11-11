@@ -26,7 +26,11 @@ catkin_make giskard_msgs_generate_messages
 
 ## starting this package
 
-- First load this package into your roslisp_repl. 
+- open commandline 
+- roslaunch knowrob_refills knowrob_refills.launch 
+- roslaunch refills_cram refills_cram.launch 
+
+- then load this package into your roslisp_repl. 
 - press ,
 - type 'r-l-s' then 'tab'
 - return
